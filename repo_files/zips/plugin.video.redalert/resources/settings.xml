@@ -1,0 +1,7 @@
+<settings>
+<category label="General">
+     <setting id="Username" type="text" label="Username" default=""/>
+     <setting id="Password" type="text" option="writeable,hidden" label="Password" default=""/>
+	 <setting id="improve" type="bool" label="Use Advanced Settings?"value="True"/>
+</category>
+</settings>
