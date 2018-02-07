@@ -14,10 +14,10 @@ fanart       = xbmc.translatePath(os.path.join('special://home/addons/' + user.i
 username     = control.setting('Username')
 password     = control.setting('Password')
 
-live_url     = '%s:%s/enigma2.php?username=%s&password=%s&type=get_live_categories'%(user.host,user.port,username,password)
-vod_url      = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host,user.port,username,password)
-panel_api    = '%s:%s/panel_api.php?username=%s&password=%s'%(user.host,user.port,username,password)
-play_url     = '%s:%s/live/%s/%s/'%(user.host,user.port,username,password)
+live_url     = '%s:%s/enigma2.php?username=%s&password=%s&type=get_live_categories'%(user.host(),user.port,username,password)
+vod_url      = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host(),user.port,username,password)
+panel_api    = '%s:%s/panel_api.php?username=%s&password=%s'%(user.host(),user.port,username,password)
+play_url     = '%s:%s/live/%s/%s/'%(user.host(),user.port,username,password)
 
 
 Guide = xbmc.translatePath(os.path.join('special://home/addons/addons/'+user.id+'/resources/catchup', 'guide.xml'))
@@ -39,7 +39,7 @@ def start():
 		control.setSetting('Username',usern)
 		control.setSetting('Password',passw)
 		xbmc.executebuiltin('Container.Refresh')
-		auth = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host,user.port,usern,passw)
+		auth = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host(),user.port,usern,passw)
 		auth = tools.OPEN_URL(auth)
 		if auth == "":
 			line1 = "Incorrect Login Details"
@@ -50,21 +50,21 @@ def start():
 		else:
 			line1 = "Login Sucsessfull"
 			line2 = "Welcome to "+user.name 
-			line3 = ('[COLOR white]%s[/COLOR]'%usern)
+			line3 = ('[B][COLOR white]%s[/COLOR][/B]'%usern)
 			xbmcgui.Dialog().ok(user.name, line1, line2, line3)
 			tvguidesetup()
 			addonsettings('ADS2','')
 			xbmc.executebuiltin('Container.Refresh')
 			home()
 	else:
-		auth = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host,user.port,username,password)
+		auth = '%s:%s/enigma2.php?username=%s&password=%s&type=get_vod_categories'%(user.host(),user.port,username,password)
 		auth = tools.OPEN_URL(auth)
 		if not auth=="":
 			tools.addDir('Account Information','url',6,icon,fanart,'')
 			tools.addDir('Live TV','live',1,icon,fanart,'')
-			tools.addDir('Catchup TV','url',12,icon,fanart,'')
 			if xbmc.getCondVisibility('System.HasAddon(pvr.iptvsimple)'):
 				tools.addDir('TV Guide','pvr',7,icon,fanart,'')
+			tools.addDir('Catchup TV','url',12,icon,fanart,'')
 			tools.addDir('VOD','vod',3,icon,fanart,'')
 			tools.addDir('Search','url',5,icon,fanart,'')
 			tools.addDir('Settings','url',8,icon,fanart,'')
@@ -73,9 +73,9 @@ def start():
 def home():
 	tools.addDir('Account Information','url',6,icon,fanart,'')
 	tools.addDir('Live TV','live',1,icon,fanart,'')
-	tools.addDir('Catchup TV','url',12,icon,fanart,'')
 	if xbmc.getCondVisibility('System.HasAddon(pvr.iptvsimple)'):
 		tools.addDir('TV Guide','pvr',7,icon,fanart,'')
+	tools.addDir('Catchup TV','url',12,icon,fanart,'')
 	tools.addDir('VOD','vod',3,icon,fanart,'')
 	tools.addDir('Search','',5,icon,fanart,'')
 	tools.addDir('Settings','url',8,icon,fanart,'')
@@ -89,9 +89,11 @@ def livecategory(url):
 		name = tools.regex_from_to(a,'<title>','</title>')
 		name = base64.b64decode(name)
 		url1  = tools.regex_from_to(a,'<playlist_url>','</playlist_url>').replace('<![CDATA[','').replace(']]>','')
-		if not 'Install Videos' in name:
-			if not 'TEST CHANNELS' in name:
-					tools.addDir(name,url1,2,icon,fanart,'')
+		if xbmcaddon.Addon().getSetting('hidexxx')=='true':
+			tools.addDir('%s'%name,url1,2,icon,fanart,'')
+		else:
+			if not 'XXX |' in name:
+				tools.addDir('%s'%name,url1,2,icon,fanart,'')
 		
 def Livelist(url):
 	url  = buildcleanurl(url)
@@ -105,7 +107,13 @@ def Livelist(url):
 		thumb= tools.regex_from_to(a,'<desc_image>','</desc_image>').replace('<![CDATA[','').replace(']]>','')
 		url1  = tools.regex_from_to(a,'<stream_url>','</stream_url>').replace('<![CDATA[','').replace(']]>','')
 		desc = tools.regex_from_to(a,'<description>','</description>')
-		tools.addDir(name,url1,4,thumb,fanart,base64.b64decode(desc))
+		if xbmcaddon.Addon().getSetting('hidexxx')=='true':
+			tools.addDir(name,url1,4,thumb,fanart,base64.b64decode(desc))
+		else:
+			if not 'XXX:' in name:
+				if not 'XXX VOD:' in name:
+					tools.addDir(name,url1,4,thumb,fanart,base64.b64decode(desc))
+		
 		
 	
 def vod(url):
@@ -136,7 +144,7 @@ def vod(url):
 					year = re.compile('-.*?-.*?-(.*?)-',re.DOTALL).findall(year)
 					runt = tools.regex_from_to(desc,'DURATION_SECS:','\n')
 					genre= tools.regex_from_to(desc,'GENRE:','\n')
-					tools.addDirMeta(str(name).replace('[/COLOR].','.[/COLOR]'),url,4,thumb,fanart,plot,str(year).replace("['","").replace("']",""),str(cast).split(),ratin,runt,genre)
+					tools.addDirMeta(str(name).replace('[/COLOR][/B].','.[/COLOR][/B]'),url,4,thumb,fanart,plot,str(year).replace("['","").replace("']",""),str(cast).split(),ratin,runt,genre)
 				except:pass
 				xbmcplugin.setContent(int(sys.argv[1]), 'movies')
 			else:
@@ -177,7 +185,7 @@ def tvarchive(name,description):
     date3 = datetime.datetime.now() - datetime.timedelta(days)
     date = str(date3)
     date = str(date).replace('-','').replace(':','').replace(' ','')
-    APIv2 = base64.b64decode("JXM6JXMvcGxheWVyX2FwaS5waHA/dXNlcm5hbWU9JXMmcGFzc3dvcmQ9JXMmYWN0aW9uPWdldF9zaW1wbGVfZGF0YV90YWJsZSZzdHJlYW1faWQ9JXM=")%(user.host,user.port,username,password,description)
+    APIv2 = base64.b64decode("JXM6JXMvcGxheWVyX2FwaS5waHA/dXNlcm5hbWU9JXMmcGFzc3dvcmQ9JXMmYWN0aW9uPWdldF9zaW1wbGVfZGF0YV90YWJsZSZzdHJlYW1faWQ9JXM=")%(user.host(),user.port,username,password,description)
     link=tools.OPEN_URL(APIv2)
     match = re.compile('"title":"(.+?)".+?"start":"(.+?)","end":"(.+?)","description":"(.+?)"').findall(link)
     for ShowTitle,start,end,DesC in match:
@@ -204,9 +212,9 @@ def tvarchive(name,description):
         Finalstart = Editstart.replace('-:','-')
         if Realstart > date:
             if Realstart < now:
-                catchupURL = base64.b64decode("JXM6JXMvc3RyZWFtaW5nL3RpbWVzaGlmdC5waHA/dXNlcm5hbWU9JXMmcGFzc3dvcmQ9JXMmc3RyZWFtPSVzJnN0YXJ0PQ==")%(user.host,user.port,username,password,description)
+                catchupURL = base64.b64decode("JXM6JXMvc3RyZWFtaW5nL3RpbWVzaGlmdC5waHA/dXNlcm5hbWU9JXMmcGFzc3dvcmQ9JXMmc3RyZWFtPSVzJnN0YXJ0PQ==")%(user.host(),user.port,username,password,description)
                 ResultURL = catchupURL + str(Finalstart) + "&duration=%s"%(FinalDuration)
-                kanalinimi = "[COLOR white]%s[/COLOR] - %s"%(start2,ShowTitle)
+                kanalinimi = "[B][COLOR white]%s[/COLOR][/B] - %s"%(start2,ShowTitle)
                 tools.addDir(kanalinimi,ResultURL,4,icon,fanart,DesC)
 
 	
@@ -230,8 +238,8 @@ def _pbhook(numblocks, blocksize, filesize, dp, start_time):
             kbps_speed = kbps_speed / 1024 
             mbps_speed = kbps_speed / 1024 
             total = float(filesize) / (1024 * 1024) 
-            mbs = '[COLOR white]%.02f MB of less than 5MB[/COLOR]' % (currently_downloaded)
-            e = '[COLOR white]Speed:  %.02f Mb/s ' % mbps_speed  + '[/COLOR]'
+            mbs = '[B][COLOR white]%.02f MB of less than 5MB[/COLOR][/B]' % (currently_downloaded)
+            e = '[B][COLOR white]Speed:  %.02f Mb/s ' % mbps_speed  + '[/COLOR][/B]'
             dp.update(percent, mbs, e)
         except: 
             percent = 100 
@@ -269,7 +277,7 @@ def search():
 		return False
 	text = searchdialog()
 	if not text:
-		xbmc.executebuiltin("XBMC.Notification([COLOR white][B]Search is Empty[/B][/COLOR],Aborting search,4000,"+icon+")")
+		xbmc.executebuiltin("XBMC.Notification([B][COLOR white][B]Search is Empty[/B][/COLOR][/B],Aborting search,4000,"+icon+")")
 		return
 	xbmc.log(str(text))
 	open = tools.OPEN_URL(panel_api)
@@ -286,13 +294,9 @@ def search():
 	
 def settingsmenu():
 	if xbmcaddon.Addon().getSetting('meta')=='true':
-		META = '[COLOR lime]ON[/COLOR]'
+		META = '[B][COLOR lime]ON[/COLOR][/B]'
 	else:
-		META = '[COLOR red]OFF[/COLOR]'
-	if xbmcaddon.Addon().getSetting('update')=='true':
-		UPDATE = '[COLOR lime]ON[/COLOR]'
-	else:
-		UPDATE = '[COLOR red]OFF[/COLOR]'
+		META = '[B][COLOR red]OFF[/COLOR][/B]'
 	tools.addDir('Edit Advanced Settings','ADS',10,icon,fanart,'')
 	tools.addDir('META for VOD is %s'%META,'META',10,icon,fanart,META)
 	tools.addDir('Log Out','LO',10,icon,fanart,'')
@@ -345,7 +349,7 @@ def addonsettings(url,description):
 		dialog = xbmcgui.Dialog().yesno(user.name,'Would You like us to Setup the TV Guide for You?')
 		if dialog:
 			pvrsetup()
-			xbmcgui.Dialog().ok(user.name, 'PVR Integration Complete')
+			xbmcgui.Dialog().ok(user.name, 'PVR Integration Complete, Restart Kodi For Changes To Take Effect')
 	elif url =="ST":
 		xbmc.executebuiltin('Runscript("special://home/addons/'+user.id+'/resources/modules/speedtest.py")')
 	elif url =="META":
@@ -354,6 +358,13 @@ def addonsettings(url,description):
 			xbmc.executebuiltin('Container.Refresh')
 		else:
 			xbmcaddon.Addon().setSetting('meta','true')
+			xbmc.executebuiltin('Container.Refresh')
+	elif url =="XXX":
+		if 'ON' in description:
+			xbmcaddon.Addon().setSetting('hidexxx','false')
+			xbmc.executebuiltin('Container.Refresh')
+		else:
+			xbmcaddon.Addon().setSetting('hidexxx','true')
 			xbmc.executebuiltin('Container.Refresh')
 	elif url =="LO":
 		xbmcaddon.Addon().setSetting('Username','')
@@ -446,7 +457,6 @@ def passpopup():
 		
 		
 def accountinfo():
-	try:
 		open = tools.OPEN_URL(panel_api)
 		username   = tools.regex_from_to(open,'"username":"','"')
 		password   = tools.regex_from_to(open,'"password":"','"')
@@ -454,25 +464,27 @@ def accountinfo():
 		connects   = tools.regex_from_to(open,'"max_connections":"','"')
 		active     = tools.regex_from_to(open,'"active_cons":"','"')
 		expiry     = tools.regex_from_to(open,'"exp_date":"','"')
-		expiry     = datetime.datetime.fromtimestamp(int(expiry)).strftime('%d/%m/%Y - %H:%M')
-		expreg     = re.compile('^(.*?)/(.*?)/(.*?)$',re.DOTALL).findall(expiry)
-		for day,month,year in expreg:
-			month     = tools.MonthNumToName(month)
-			year      = re.sub(' -.*?$','',year)
-			expiry    = month+' '+day+' - '+year
-			ip        = tools.getlocalip()
-			extip     = tools.getexternalip()
-			tools.addDir('[COLOR white]Username :[/COLOR] '+username,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Password :[/COLOR] '+password,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Expiry Date:[/COLOR] '+expiry,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Account Status :[/COLOR] %s'%status,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Current Connections:[/COLOR] '+ active,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Allowed Connections:[/COLOR] '+connects,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Local IP Address:[/COLOR] '+ip,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]External IP Address:[/COLOR] '+extip,'','',icon,fanart,'')
-			tools.addDir('[COLOR white]Kodi Version:[/COLOR] '+str(KODIV),'','',icon,fanart,'')
-	except:
-		pass
+		if not expiry=="":
+			expiry     = datetime.datetime.fromtimestamp(int(expiry)).strftime('%d/%m/%Y - %H:%M')
+			expreg     = re.compile('^(.*?)/(.*?)/(.*?)$',re.DOTALL).findall(expiry)
+			for day,month,year in expreg:
+				month     = tools.MonthNumToName(month)
+				year      = re.sub(' -.*?$','',year)
+				expiry    = month+' '+day+' - '+year
+		else:
+			expiry = 'Unlimited'
+			
+		ip        = tools.getlocalip()
+		tools.addDir('[B][COLOR white]Username :[/COLOR][/B] '+username,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Password :[/COLOR][/B] '+password,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Expiry Date:[/COLOR][/B] '+expiry,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Account Status :[/COLOR][/B] %s'%status,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Current Connections:[/COLOR][/B] '+ active,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Allowed Connections:[/COLOR][/B] '+connects,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Local IP Address:[/COLOR][/B] '+ip,'','',icon,fanart,'')
+		tools.addDir('[B][COLOR white]Kodi Version:[/COLOR][/B] '+str(KODIV),'','',icon,fanart,'')
+		
+
 		
 	
 def correctPVR():
@@ -483,8 +495,8 @@ def correctPVR():
 	jsonSetPVR = '{"jsonrpc":"2.0", "method":"Settings.SetSettingValue", "params":{"setting":"pvrmanager.enabled", "value":true},"id":1}'
 	IPTVon 	   = '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"pvr.iptvsimple","enabled":true},"id":1}'
 	nulldemo   = '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"pvr.demo","enabled":false},"id":1}'
-	loginurl   = user.host+':'+user.port+"/get.php?username=" + username_text + "&password=" + password_text + "&type=m3u_plus&output=ts"
-	EPGurl     = user.host+':'+user.port+"/xmltv.php?username=" + username_text + "&password=" + password_text
+	loginurl   = user.host()+':'+user.port+"/get.php?username=" + username_text + "&password=" + password_text + "&type=m3u_plus&output=ts"
+	EPGurl     = user.host()+':'+user.port+"/xmltv.php?username=" + username_text + "&password=" + password_text
 
 	xbmc.executeJSONRPC(jsonSetPVR)
 	xbmc.executeJSONRPC(IPTVon)
@@ -502,7 +514,7 @@ def tvguidesetup():
 		dialog = xbmcgui.Dialog().yesno(user.name,'Would You like us to Setup the TV Guide for You?')
 		if dialog:
 				pvrsetup()
-				xbmcgui.Dialog().ok(user.name, 'PVR Integration Complete')
+				xbmcgui.Dialog().ok(user.name, 'PVR Integration Complete, Restart Kodi For Changes To Take Effect')
 
 def num2day(num):
 	if num =="0":
@@ -522,8 +534,8 @@ def num2day(num):
 	return day
 	
 def extras():
-	tools.addDir('Integrate With TV Guide','tv',10,icon,fanart,'')
 	tools.addDir('Run a Speed Test','ST',10,icon,fanart,'')
+	tools.addDir('Setup PVR Guide','tv',10,icon,fanart,'')
 	tools.addDir('Clear Cache','CC',10,icon,fanart,'')
 	
 
